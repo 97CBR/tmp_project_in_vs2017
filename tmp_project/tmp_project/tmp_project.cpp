@@ -3,34 +3,41 @@
 
 #include <iostream>
 #include "CbrThreadPool.h"
+#include <cstdlib>
 
 void fun1() {
+    const unsigned seed = time(nullptr); // Random generator seed
+    srand(seed);
+    Sleep(rand() % 500 + 100);
     cout << "current thread id : " << GetCurrentThreadId() << endl;
 }
 
 void fun2(const int id) {
-    cout << "current thread id : " << GetCurrentThreadId() << "\t i:" << id << endl;
 
+    const unsigned seed = time(nullptr);  // Random generator seed
+    srand(seed);
+    Sleep(rand() % 2000 + 10);
+    cout << "current thread id : " << GetCurrentThreadId() << "\t i:" << id << endl;
 }
 
 int main() {
     // CbrThreadPool ctp;
-    CbrThreadPool ctp(5, 10);
+    CbrThreadPool ctp(5, 30);
 
     // std::future<void> ff = ctp.PushTask(fun1);
 
-    for (int i = 0; i < 10; ++i)
-        ctp.PushTask(fun1);
+    // for (int i = 0; i < 10; ++i)
+    //     ctp.PushTask(fun1);
 
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 60; ++i)
         ctp.PushTask(fun2, i);
 
     // ctp.Start();
 
-    Sleep(5000);
+    Sleep(10000);
 
-    ctp.Stop();
+    // ctp.Stop();
 
     std::cout << "Hello World!\n";
     return 0;
