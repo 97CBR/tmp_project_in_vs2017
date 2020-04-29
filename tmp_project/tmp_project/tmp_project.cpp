@@ -2,16 +2,44 @@
 //
 
 #include <iostream>
+#include "CbrThreadPool.h"
 
-int main()
-{
+void fun1() {
+    cout << "current thread id : " << GetCurrentThreadId() << endl;
+}
+
+void fun2(const int id) {
+    cout << "current thread id : " << GetCurrentThreadId() << "\t i:" << id << endl;
+
+}
+
+int main() {
+    // CbrThreadPool ctp;
+    CbrThreadPool ctp(5, 10);
+
+    // std::future<void> ff = ctp.PushTask(fun1);
+
+    for (int i = 0; i < 10; ++i)
+        ctp.PushTask(fun1);
+
+
+    for (int i = 0; i < 10; ++i)
+        ctp.PushTask(fun2, i);
+
+    // ctp.Start();
+
+    Sleep(5000);
+
+    ctp.Stop();
+
     std::cout << "Hello World!\n";
+    return 0;
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
 // 调试程序: F5 或调试 >“开始调试”菜单
 
-// 入门使用技巧: 
+// 入门使用技巧:
 //   1. 使用解决方案资源管理器窗口添加/管理文件
 //   2. 使用团队资源管理器窗口连接到源代码管理
 //   3. 使用输出窗口查看生成输出和其他消息
