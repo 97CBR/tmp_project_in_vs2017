@@ -5,6 +5,8 @@
 #include "CbrThreadPool.h"
 #include <cstdlib>
 
+
+
 void fun1() {
     const unsigned seed = time(nullptr); // Random generator seed
     srand(seed);
@@ -16,13 +18,17 @@ void fun2(const int id) {
 
     const unsigned seed = time(nullptr);  // Random generator seed
     srand(seed);
-    Sleep(rand() % 2000 + 10);
+    Sleep(rand() % 500 + 10);
+    if (id<3) {
+      Sleep(10000);
+    }
     cout << "current thread id : " << GetCurrentThreadId() << "\t i:" << id << endl;
 }
 
 int main() {
     // CbrThreadPool ctp;
-    CbrThreadPool ctp(5, 30);
+    CbrThreadPool ctp(4, 16);
+    // CbrThreadPool ctp(4, 16,2);
 
     // std::future<void> ff = ctp.PushTask(fun1);
 
@@ -30,12 +36,12 @@ int main() {
     //     ctp.PushTask(fun1);
 
 
-    for (int i = 0; i < 60; ++i)
+    for (int i = 0; i < 5000; ++i)
         ctp.PushTask(fun2, i);
 
     // ctp.Start();
 
-    Sleep(10000);
+    Sleep(60000);
 
     // ctp.Stop();
 

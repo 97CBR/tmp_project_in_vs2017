@@ -15,6 +15,7 @@ class CbrThreadPool {
     public:
         CbrThreadPool();
         CbrThreadPool(int min, int max);
+        CbrThreadPool(int min, int max, int timeout);
         ~CbrThreadPool();
         template <class F, class ... Args>
         auto PushTask(F&& f, Args&& ... args)->std::future<decltype(f(args...))>;
@@ -23,13 +24,13 @@ class CbrThreadPool {
         // auto PushTask(F&& f)->std::future<decltype(f(0))>;
 
         void Stop();
-        void Start();
 
     private:
         void Init(int min, int max);
+        void Init(int min, int max, int timeout);
         void DynamicAdjustThreadNumber(int min, int max);
         void CreateThread();
-        void CreateThread(int timeout);
+        void CreateThread(const int timeout);
 
 
     private:
