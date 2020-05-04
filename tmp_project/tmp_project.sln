@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.960
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tmp_project", "tmp_project\tmp_project.vcxproj", "{ECB19AA4-94AD-4E3A-89A6-2710E56785B1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cbr_thread_pool", "cbr_thread_pool\cbr_thread_pool.vcxproj", "{ECB19AA4-94AD-4E3A-89A6-2710E56785B1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cbr_object_pool", "cbr_object_pool\cbr_object_pool.vcxproj", "{2A5EEC82-8339-49AA-B961-5C665C04A14B}"
 EndProject
