@@ -18,5 +18,13 @@
     <ClCompile Include="cbr_object_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="CbrObjectPool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CbrObjectPool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

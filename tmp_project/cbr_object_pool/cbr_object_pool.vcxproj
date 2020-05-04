@@ -151,7 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CbrObjectPool.cpp" />
     <ClCompile Include="cbr_object_pool.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CbrObjectPool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
