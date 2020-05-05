@@ -44,9 +44,19 @@ void EncryptedDiskPartition::ReadSm4Key(const int device_number,
     UCHAR data[512] = {0};
     ReadPhysicalSector(35, sizeof(data), data, sizeof(data), device_number);
 
+
     for (auto i = 0x80; i < 0xA0; ++i) sprintf(key + i - 0x80, "%c", data[i]);
     // WritePhysicalSector(35, 32, data, 0x80, device_number);
 
+}
+
+void EncryptedDiskPartition::ReadSm4Key(const int device_number,
+                                        byte* key) const {
+    UCHAR data[512] = {0};
+    ReadPhysicalSector(35, sizeof(data), data, sizeof(data), device_number);
+    memcpy_s(key, 32, data + 0x80, 32);
+    // for (auto i = 0x80; i < 0xA0; ++i) sprintf(key + i - 0x80, "%c", data[i]);
+    // WritePhysicalSector(35, 32, data, 0x80, device_number);
 }
 
 
@@ -62,17 +72,18 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
     // 保留备份
     // WritePhysicalSector(35, 64, law_data, 0x1B0 + 0x0E, device_number);
 
+    // byte* keys = new byte[32];
+    // // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
+    // char* key = new char[33];
+    //
+    // ReadSm4Key(device_number, key);
+    // unsigned long t = strlen(key);
+    //
+    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+
     byte* keys = new byte[32];
-    char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
 
-    byte* plain_text = new byte[65];
-
-    memset(plain_text, 0, 65 * sizeof(BYTE));
-
-
-    unsigned long t = strlen(key);
-
-    HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+    ReadSm4Key(device_number, keys);
 
     BYTE cipher_text[130];
     sm4_context ctx;
@@ -91,13 +102,13 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
 }
 
 
-BOOL EncryptedDiskPartition::EncryptGpt(const int device_number)  {
+BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) {
     UCHAR data[513] = {0};
     ReadPhysicalSector(1, sizeof(data), data, sizeof(data), device_number);
     auto lba_backup_sector_int = 0;
     string lba_backup_sector_str;
     for (auto i = 0x32; i >= 0x30; --i) {
-        char tmp[5] = {0 } ;
+        char tmp[5] = {0};
         sprintf_s(tmp, 4, "%02X", data[i]);
         lba_backup_sector_str += tmp;
     }
@@ -126,12 +137,19 @@ BOOL EncryptedDiskPartition::EncryptGpt(const int device_number)  {
     // WritePhysicalSectorWithoutOffset(35, sizeof(law_data), law_data, 0x00,
     //                                  device_number);
 
+    // byte* keys = new byte[32];
+    // char key[33] = "0123456789ABCDEFFEDCBA9876543210";
+    // char* key = new char[33];
+    //
+    // ReadSm4Key(device_number, key);
+    // unsigned long t = strlen(key);
+    //
+    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+
+
     byte* keys = new byte[32];
-    char key[33] = "0123456789ABCDEFFEDCBA9876543210";
 
-    unsigned long t = strlen(key);
-
-    HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+    ReadSm4Key(device_number, keys);
 
     BYTE cipher_text[BYTES_PER_SECTOR * 32] = {0};
 
@@ -157,15 +175,21 @@ BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) {
     // for (auto i = 0x1B0 + 0x0E; i < 0x1FF; i += 1)
     memcpy_s(encrypt_data, 64, data + 0x00, 64);
     cout << encrypt_data << endl;
-    byte* keys = new byte[32];
-    char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
+    // byte* keys = new byte[32];
+    // // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
+    // char* key = new char[33];
+    //
+    // ReadSm4Key(device_number, key);
 
+    // unsigned long t = strlen(key);
+    //
+    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
     byte* plain_text = new byte[65];
 
     memset(plain_text, 0, 65 * sizeof(BYTE));
-    unsigned long t = strlen(key);
+    byte* keys = new byte[32];
 
-    HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+    ReadSm4Key(device_number, keys);
 
     sm4_context ctx;
     unsigned long i;
@@ -178,7 +202,7 @@ BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) {
 }
 
 
-BOOL EncryptedDiskPartition::DecryptGpt(const int device_number)  {
+BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) {
     UCHAR encrypt_data[BYTES_PER_SECTOR * 32] = {0};
     ReadPhysicalSectorWithoutCutOff(PARTITION_ENCRYPTED_DATA_SECTOR,
                                     sizeof(encrypt_data), encrypt_data,
@@ -194,15 +218,22 @@ BOOL EncryptedDiskPartition::DecryptGpt(const int device_number)  {
     //                                  device_number);
 
 
-    byte* keys = new byte[32];
-    char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
+    // byte* keys = new byte[32];
+    // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
+    // char* key = new char[33];
+
+    // ReadSm4Key(device_number, key);
+
+    // unsigned long t = strlen(key);
+    //
+    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
 
     byte plain_text[BYTES_PER_SECTOR * 32] = {0};
 
     memset(plain_text, 0, BYTES_PER_SECTOR * 32 * sizeof(BYTE));
-    unsigned long t = strlen(key);
+    byte* keys = new byte[32];
 
-    HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
+    ReadSm4Key(device_number, keys);
 
     sm4_context ctx;
     sm4_setkey_dec(&ctx, keys);
@@ -223,16 +254,16 @@ BOOL EncryptedDiskPartition::ReadPhysicalSector(const LONGLONG sector_start,
         const int device_number) const {
     ULONG n_bytes;
     auto result = FALSE;
-    HANDLE h_device_handle = NULL;
-    wchar_t drive[32] = {0};  // L"\\\\.\\PHYSICALDRIVE3";
+    HANDLE h_device_handle = nullptr;
+    wchar_t drive[32] = {0}; // L"\\\\.\\PHYSICALDRIVE3";
     wsprintf(drive, L"\\\\.\\PHYSICALDRIVE%d", device_number);
     //#define WIN32_LEAN_AND_MEAN
 
     UCHAR data[1024] = {0};
 
     h_device_handle =
-        CreateFile(drive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                   OPEN_EXISTING, 0, 0);
+        CreateFile(drive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                   OPEN_EXISTING, 0, nullptr);
 
     if (h_device_handle) {
         LARGE_INTEGER pointer;
@@ -242,7 +273,7 @@ BOOL EncryptedDiskPartition::ReadPhysicalSector(const LONGLONG sector_start,
         SetFilePointer(h_device_handle, pointer.LowPart, &pointer.HighPart,
                        FILE_BEGIN);
         const auto handle_r =
-            ReadFile(h_device_handle, data, BYTES_PER_SECTOR, &n_bytes, NULL);
+            ReadFile(h_device_handle, data, BYTES_PER_SECTOR, &n_bytes, nullptr);
         if (handle_r) {
             result = TRUE;
             // strncpy_s(reinterpret_cast<char*>(output_buffer), buffer_size,
@@ -268,8 +299,8 @@ BOOL EncryptedDiskPartition::WritePhysicalSector(const LONGLONG sector_start,
         const int device_number) const {
     ULONG n_bytes;
     auto result = FALSE;
-    HANDLE h_device_handle = NULL;
-    wchar_t drive[32] = {0};  // L"\\\\.\\PHYSICALDRIVE3";
+    HANDLE h_device_handle = nullptr;
+    wchar_t drive[32] = {0}; // L"\\\\.\\PHYSICALDRIVE3";
     wsprintf(drive, L"\\\\.\\PHYSICALDRIVE%d", device_number);
     //#define WIN32_LEAN_AND_MEAN
 
@@ -283,8 +314,8 @@ BOOL EncryptedDiskPartition::WritePhysicalSector(const LONGLONG sector_start,
            byte_counts);
 
     h_device_handle =
-        CreateFile(drive, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                   OPEN_EXISTING, 0, 0);
+        CreateFile(drive, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                   OPEN_EXISTING, 0, nullptr);
 
     if (h_device_handle) {
         LARGE_INTEGER pointer;
@@ -297,7 +328,7 @@ BOOL EncryptedDiskPartition::WritePhysicalSector(const LONGLONG sector_start,
         // &n_bytes, NULL);
 
         const auto handle_r = WriteFile(h_device_handle, static_cast<LPVOID>(data),
-                                        BYTES_PER_SECTOR, &n_bytes, NULL);
+                                        BYTES_PER_SECTOR, &n_bytes, nullptr);
         FlushFileBuffers(h_device_handle);
         if (handle_r)
             result = TRUE;
@@ -316,16 +347,16 @@ BOOL EncryptedDiskPartition::ReadPhysicalSectorWithoutCutOff(const LONGLONG sect
         const int device_number) const {
     ULONG n_bytes;
     auto result = FALSE;
-    HANDLE h_device_handle = NULL;
-    wchar_t drive[32] = {0};  // L"\\\\.\\PHYSICALDRIVE3";
+    HANDLE h_device_handle = nullptr;
+    wchar_t drive[32] = {0}; // L"\\\\.\\PHYSICALDRIVE3";
     wsprintf(drive, L"\\\\.\\PHYSICALDRIVE%d", device_number);
     //#define WIN32_LEAN_AND_MEAN
 
     // UCHAR data[1024] = {0};
 
     h_device_handle =
-        CreateFile(drive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                   OPEN_EXISTING, 0, 0);
+        CreateFile(drive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                   OPEN_EXISTING, 0, nullptr);
 
     if (h_device_handle) {
         LARGE_INTEGER pointer;
@@ -335,7 +366,7 @@ BOOL EncryptedDiskPartition::ReadPhysicalSectorWithoutCutOff(const LONGLONG sect
         SetFilePointer(h_device_handle, pointer.LowPart, &pointer.HighPart,
                        FILE_BEGIN);
         const auto handle_r = ReadFile(h_device_handle, output_buffer,
-                                       BYTES_PER_SECTOR, &n_bytes, NULL);
+                                       BYTES_PER_SECTOR, &n_bytes, nullptr);
         if (handle_r) {
             result = TRUE;
 
@@ -358,15 +389,15 @@ BOOL EncryptedDiskPartition::WritePhysicalSectorWithoutOffset(
     const ULONG offset, const int device_number) const {
     ULONG n_bytes;
     auto result = FALSE;
-    HANDLE h_device_handle = NULL;
-    wchar_t drive[32] = {0};  // L"\\\\.\\PHYSICALDRIVE3";
+    HANDLE h_device_handle = nullptr;
+    wchar_t drive[32] = {0}; // L"\\\\.\\PHYSICALDRIVE3";
     wsprintf(drive, L"\\\\.\\PHYSICALDRIVE%d", device_number);
     //#define WIN32_LEAN_AND_MEAN
 
 
     h_device_handle =
-        CreateFile(drive, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                   OPEN_EXISTING, 0, 0);
+        CreateFile(drive, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                   OPEN_EXISTING, 0, nullptr);
 
     if (h_device_handle) {
         LARGE_INTEGER pointer;
@@ -380,7 +411,7 @@ BOOL EncryptedDiskPartition::WritePhysicalSectorWithoutOffset(
 
         const auto handle_r =
             WriteFile(h_device_handle, static_cast<LPVOID>(input_buffer),
-                      byte_counts, &n_bytes, NULL);
+                      byte_counts, &n_bytes, nullptr);
         FlushFileBuffers(h_device_handle);
         if (handle_r)
             result = TRUE;
@@ -393,23 +424,22 @@ BOOL EncryptedDiskPartition::WritePhysicalSectorWithoutOffset(
 }
 
 
-
 // 将16进制的string字符串，转成16进制的arr
 int EncryptedDiskPartition::HexCharStr2UnsignedCharStr(char* src,
         unsigned long lsrc,
         int flag,
         unsigned char* out, unsigned long* lout) {
     if ((0 == flag && 0 != lsrc % 2) || (0 != flag && 0 != lsrc % 3) ||
-            NULL == src || NULL == out) {
+            nullptr == src || nullptr == out) {
         if ((0 == flag && 0 != lsrc % 2)) printf("长度有问题,lsrc = %d\n", lsrc);
         if ((0 != flag && 0 != lsrc % 3)) printf("3的倍数？\n");
-        if (NULL == src) printf("src是空的 \n");
-        if (NULL == out) printf("lout是空的 \n");
+        if (nullptr == src) printf("src是空的 \n");
+        if (nullptr == out) printf("lout是空的 \n");
         printf("error 1 \n");
-        return 1;  // param err
+        return 1; // param err
     }
 
-    int j = 0;  // index of out buff
+    int j = 0; // index of out buff
     if (0 == flag) {
         // int i;
         for (int i = 0; i < lsrc; i += 2) {

@@ -17,7 +17,8 @@ class EncryptedDiskPartition {
         ~EncryptedDiskPartition();
         void JudgePartitionType(int device_number);
         void WriteSm4Key(const int device_number, char* key) const;
-        void ReadSm4Key(int device_number, char* key) const;
+        void ReadSm4Key(const int device_number, char* key) const;
+        void ReadSm4Key(int device_number, byte* key) const;
         BOOL EncryptMbr(int device_number);
         BOOL DecryptMbr(int device_number) ;
         BOOL DecryptGpt(int device_number) ;
