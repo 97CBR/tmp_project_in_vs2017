@@ -12,7 +12,7 @@ EncryptedDiskPartition::~EncryptedDiskPartition() {
 }
 
 // 判断分区类型
-VOID EncryptedDiskPartition::JudgePartitionType(const int device_number) {
+VOID EncryptedDiskPartition::JudgePartitionType(const int device_number) const {
     UCHAR data[8] = {0};
     ReadPhysicalSector(1, sizeof(data), data, sizeof(data), device_number);
     cout << *data << endl;
@@ -38,7 +38,7 @@ void EncryptedDiskPartition::WriteSm4Key(const int device_number, char* key) con
 }
 
 void EncryptedDiskPartition::ReadSm4Key(const int device_number,
-                                        char* key) const {
+                                        char* key) {
 
 
     UCHAR data[512] = {0};
@@ -51,7 +51,7 @@ void EncryptedDiskPartition::ReadSm4Key(const int device_number,
 }
 
 void EncryptedDiskPartition::ReadSm4Key(const int device_number,
-                                        byte* key) const {
+                                        byte* key) {
     UCHAR data[512] = {0};
     ReadPhysicalSector(35, sizeof(data), data, sizeof(data), device_number);
     memcpy_s(key, 32, data + 0x80, 32);
@@ -60,26 +60,17 @@ void EncryptedDiskPartition::ReadSm4Key(const int device_number,
 }
 
 
-BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
+BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) const {
     UCHAR data[513] = {0};
     ReadPhysicalSector(0, sizeof(data), data, sizeof(data), device_number);
 
     UCHAR law_data[65] = {0};
     // 复制原始数据
     memcpy_s(law_data, 64, data + 0x1B0 + 0x0E, 64);
-    cout << law_data << endl;
+    // cout << law_data << endl;
 
     // 保留备份
     // WritePhysicalSector(35, 64, law_data, 0x1B0 + 0x0E, device_number);
-
-    // byte* keys = new byte[32];
-    // // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
-    // char* key = new char[33];
-    //
-    // ReadSm4Key(device_number, key);
-    // unsigned long t = strlen(key);
-    //
-    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
 
     byte* keys = new byte[32];
 
@@ -87,27 +78,26 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
 
     BYTE cipher_text[130];
     sm4_context ctx;
-    unsigned long i;
     sm4_setkey_enc(&ctx, keys);
     sm4_crypt_ecb(&ctx, 64, law_data, cipher_text);
 
     // 写入加密后的数据
     WritePhysicalSector(PARTITION_ENCRYPTED_DATA_SECTOR, 64, cipher_text, 0x00, device_number);
 
-    // memset(law_data, 0, sizeof(law_data));
     // 删除原来的分区表
-    // WritePhysicalSector(0, 64, law_data, 0x1B0 + 0x0E, device_number);
+    memset(law_data, 0, sizeof(law_data));
+    WritePhysicalSector(0, 64, law_data, 0x1B0 + 0x0E, device_number);
 
-    return false;
+    return true;
 }
 
 
-BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) {
+BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) const {
     UCHAR data[513] = {0};
     ReadPhysicalSector(1, sizeof(data), data, sizeof(data), device_number);
-    auto lba_backup_sector_int = 0;
+    long int lba_backup_sector_int = 0;
     string lba_backup_sector_str;
-    for (auto i = 0x32; i >= 0x30; --i) {
+    for (auto i = 0x37; i >= 0x30; --i) {
         char tmp[5] = {0};
         sprintf_s(tmp, 4, "%02X", data[i]);
         lba_backup_sector_str += tmp;
@@ -137,16 +127,6 @@ BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) {
     // WritePhysicalSectorWithoutOffset(35, sizeof(law_data), law_data, 0x00,
     //                                  device_number);
 
-    // byte* keys = new byte[32];
-    // char key[33] = "0123456789ABCDEFFEDCBA9876543210";
-    // char* key = new char[33];
-    //
-    // ReadSm4Key(device_number, key);
-    // unsigned long t = strlen(key);
-    //
-    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
-
-
     byte* keys = new byte[32];
 
     ReadSm4Key(device_number, keys);
@@ -162,28 +142,31 @@ BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) {
                                      sizeof(law_data), cipher_text, 0x00,
                                      device_number);
 
+    BYTE blank_text[BYTES_PER_SECTOR * 32] = {0};
+
+    // 清空主分区表
+    WritePhysicalSectorWithoutOffset(2, sizeof(blank_text), blank_text, 0x00,
+                                     device_number);
+
+    // 清空备份分区表
+    WritePhysicalSectorWithoutOffset(lba_backup_sector_int + 1, sizeof(blank_text),
+                                     blank_text, 0x00,
+                                     device_number);
+
     delete[] keys;
     return 0;
 }
 
 
-BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) {
+BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) const {
     UCHAR data[513] = {0};
     ReadPhysicalSector(PARTITION_ENCRYPTED_DATA_SECTOR, sizeof(data), data, sizeof(data), device_number);
 
     UCHAR encrypt_data[65] = {0};
     // for (auto i = 0x1B0 + 0x0E; i < 0x1FF; i += 1)
     memcpy_s(encrypt_data, 64, data + 0x00, 64);
-    cout << encrypt_data << endl;
-    // byte* keys = new byte[32];
-    // // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
-    // char* key = new char[33];
-    //
-    // ReadSm4Key(device_number, key);
+    // cout << encrypt_data << endl;
 
-    // unsigned long t = strlen(key);
-    //
-    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
     byte* plain_text = new byte[65];
 
     memset(plain_text, 0, 65 * sizeof(BYTE));
@@ -202,7 +185,20 @@ BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) {
 }
 
 
-BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) {
+BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) const {
+
+    UCHAR data[513] = {0};
+    ReadPhysicalSector(1, sizeof(data), data, sizeof(data), device_number);
+    long int lba_backup_sector_int = 0;
+    string lba_backup_sector_str;
+    for (auto i = 0x37; i >= 0x30; --i) {
+        char tmp[5] = {0};
+        sprintf_s(tmp, 4, "%02X", data[i]);
+        lba_backup_sector_str += tmp;
+    }
+    lba_backup_sector_int = strtol(lba_backup_sector_str.c_str(), nullptr, 16);
+    cout << "备份LBA 地址:" << lba_backup_sector_int << endl;
+
     UCHAR encrypt_data[BYTES_PER_SECTOR * 32] = {0};
     ReadPhysicalSectorWithoutCutOff(PARTITION_ENCRYPTED_DATA_SECTOR,
                                     sizeof(encrypt_data), encrypt_data,
@@ -218,16 +214,6 @@ BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) {
     //                                  device_number);
 
 
-    // byte* keys = new byte[32];
-    // char* key = (char*)"0123456789ABCDEFFEDCBA9876543210";
-    // char* key = new char[33];
-
-    // ReadSm4Key(device_number, key);
-
-    // unsigned long t = strlen(key);
-    //
-    // HexCharStr2UnsignedCharStr(key, strlen(key), 0, keys, &t);
-
     byte plain_text[BYTES_PER_SECTOR * 32] = {0};
 
     memset(plain_text, 0, BYTES_PER_SECTOR * 32 * sizeof(BYTE));
@@ -238,9 +224,18 @@ BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) {
     sm4_context ctx;
     sm4_setkey_dec(&ctx, keys);
     sm4_crypt_ecb(&ctx, sizeof(encrypt_data), encrypt_data, plain_text);
-
+    long int index = 0x80;
+    while (plain_text[index] == 0xA2)
+        index += 0x80;
+	// 清空剩余分区的乱码
+    memset(plain_text + index, 0, BYTES_PER_SECTOR * 32 - index);
     // 写入扇区
     WritePhysicalSectorWithoutOffset(2, sizeof(plain_text), plain_text, 0x00,
+                                     device_number);
+
+    // 写入备份扇区
+    WritePhysicalSectorWithoutOffset(lba_backup_sector_int + 1, sizeof(plain_text),
+                                     plain_text, 0x00,
                                      device_number);
 
     return false;
@@ -251,7 +246,7 @@ BOOL EncryptedDiskPartition::ReadPhysicalSector(const LONGLONG sector_start,
         const ULONG byte_counts,
         UCHAR* output_buffer,
         const ULONG buffer_size,
-        const int device_number) const {
+        const int device_number) {
     ULONG n_bytes;
     auto result = FALSE;
     HANDLE h_device_handle = nullptr;
@@ -276,13 +271,11 @@ BOOL EncryptedDiskPartition::ReadPhysicalSector(const LONGLONG sector_start,
             ReadFile(h_device_handle, data, BYTES_PER_SECTOR, &n_bytes, nullptr);
         if (handle_r) {
             result = TRUE;
-            // strncpy_s(reinterpret_cast<char*>(output_buffer), buffer_size,
-            // reinterpret_cast<char*>(data), byte_counts);
+
             memcpy_s(reinterpret_cast<char*>(output_buffer), buffer_size,
                      reinterpret_cast<char*>(data), byte_counts);
         }
-        // if (ReadFile(hDeviceHandle, p, SectorCount*BytesPerSector, &nBytes,
-        // NULL))
+
         else
             cout << ("read error %d\n", GetLastError());
 
@@ -344,7 +337,7 @@ BOOL EncryptedDiskPartition::ReadPhysicalSectorWithoutCutOff(const LONGLONG sect
         const ULONG byte_counts,
         UCHAR* output_buffer,
         const ULONG buffer_size,
-        const int device_number) const {
+        const int device_number) {
     ULONG n_bytes;
     auto result = FALSE;
     HANDLE h_device_handle = nullptr;
@@ -367,14 +360,9 @@ BOOL EncryptedDiskPartition::ReadPhysicalSectorWithoutCutOff(const LONGLONG sect
                        FILE_BEGIN);
         const auto handle_r = ReadFile(h_device_handle, output_buffer,
                                        BYTES_PER_SECTOR, &n_bytes, nullptr);
-        if (handle_r) {
+        if (handle_r)
             result = TRUE;
 
-            // memcpy_s(reinterpret_cast<char*>(output_buffer), buffer_size,
-            //          reinterpret_cast<char*>(data), byte_counts);
-        }
-        // if (ReadFile(hDeviceHandle, p, SectorCount*BytesPerSector, &nBytes,
-        // NULL))
         else
             cout << ("read error %d\n", GetLastError());
 
@@ -386,7 +374,7 @@ BOOL EncryptedDiskPartition::ReadPhysicalSectorWithoutCutOff(const LONGLONG sect
 
 BOOL EncryptedDiskPartition::WritePhysicalSectorWithoutOffset(
     const LONGLONG sector_start, const ULONG byte_counts, UCHAR* input_buffer,
-    const ULONG offset, const int device_number) const {
+    const ULONG offset, const int device_number) {
     ULONG n_bytes;
     auto result = FALSE;
     HANDLE h_device_handle = nullptr;

@@ -15,26 +15,26 @@ class EncryptedDiskPartition {
     public:
         EncryptedDiskPartition();
         ~EncryptedDiskPartition();
-        void JudgePartitionType(int device_number);
+        void JudgePartitionType(int device_number) const;
         void WriteSm4Key(const int device_number, char* key) const;
-        void ReadSm4Key(const int device_number, char* key) const;
-        void ReadSm4Key(int device_number, byte* key) const;
-        BOOL EncryptMbr(int device_number);
-        BOOL DecryptMbr(int device_number) ;
-        BOOL DecryptGpt(int device_number) ;
-        BOOL EncryptGpt(int device_number) ;
+        static void ReadSm4Key(const int device_number, char* key);
+        static void ReadSm4Key(int device_number, byte* key);
+        BOOL EncryptMbr(int device_number) const;
+        BOOL DecryptMbr(int device_number) const;
+        BOOL DecryptGpt(int device_number) const;
+        BOOL EncryptGpt(int device_number) const;
     private:
 
-        BOOL ReadPhysicalSector(LONGLONG sector_start, ULONG byte_counts, UCHAR* output_buffer, ULONG buffer_size,
-                                int device_number) const;
+        static BOOL ReadPhysicalSector(LONGLONG sector_start, ULONG byte_counts, UCHAR* output_buffer, ULONG buffer_size,
+                                       int device_number);
         BOOL WritePhysicalSector(LONGLONG sector_start, ULONG byte_counts, UCHAR* input_buffer, ULONG offset,
                                  int device_number) const;
-        BOOL ReadPhysicalSectorWithoutCutOff(LONGLONG sector_start, ULONG byte_counts, UCHAR* output_buffer,
-                                             ULONG buffer_size,
-                                             int device_number) const;
-        BOOL WritePhysicalSectorWithoutOffset(LONGLONG sector_start, ULONG byte_counts, UCHAR* input_buffer,
-                                              ULONG offset,
-                                              int device_number) const;
-        int HexCharStr2UnsignedCharStr(char* src, unsigned long lsrc, int flag, unsigned char* out,
-                                       unsigned long* lout) ;
+        static BOOL ReadPhysicalSectorWithoutCutOff(LONGLONG sector_start, ULONG byte_counts, UCHAR* output_buffer,
+                                                    ULONG buffer_size,
+                                                    int device_number);
+        static BOOL WritePhysicalSectorWithoutOffset(LONGLONG sector_start, ULONG byte_counts, UCHAR* input_buffer,
+                                                     ULONG offset,
+                                                     int device_number);
+        static int HexCharStr2UnsignedCharStr(char* src, unsigned long lsrc, int flag, unsigned char* out,
+                                              unsigned long* lout) ;
 };
