@@ -153,9 +153,13 @@
   <ItemGroup>
     <ClCompile Include="EncryptedDiskPartition.cpp" />
     <ClCompile Include="encrypted_disk_partition.cpp" />
+    <ClCompile Include="sm4\sm4.cpp" />
+    <ClCompile Include="sm4\stringutil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EncryptedDiskPartition.h" />
+    <ClInclude Include="sm4\sm4.h" />
+    <ClInclude Include="sm4\stringutil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

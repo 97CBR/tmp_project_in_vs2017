@@ -21,9 +21,21 @@
     <ClCompile Include="EncryptedDiskPartition.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="sm4\sm4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sm4\stringutil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EncryptedDiskPartition.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sm4\sm4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sm4\stringutil.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
