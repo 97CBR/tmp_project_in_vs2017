@@ -72,6 +72,11 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) const {
     // 保留备份
     // WritePhysicalSector(35, 64, law_data, 0x1B0 + 0x0E, device_number);
 
+    if (law_data[0] == 0x00) {
+        cout <<  "已加密" << endl;
+        return true;
+    }
+
     byte* keys = new byte[32];
 
     ReadSm4Key(device_number, keys);
@@ -109,6 +114,12 @@ BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) const {
         UCHAR tmp[513] = {0};
         ReadPhysicalSector(2 + i / 4, sizeof(tmp), tmp, sizeof(tmp),
                            device_number);
+
+        if (tmp[0] == 0x00) {
+            cout << "已加密" << endl;
+            return true;
+        }
+
         UCHAR header[8] = {0};
         memcpy_s(header, 8, tmp + 128 * (i % 4), 8);
         if (header[0] != '\0') {
@@ -227,7 +238,7 @@ BOOL EncryptedDiskPartition::DecryptGpt(const int device_number) const {
     long int index = 0x80;
     while (plain_text[index] == 0xA2)
         index += 0x80;
-	// 清空剩余分区的乱码
+    // 清空剩余分区的乱码
     memset(plain_text + index, 0, BYTES_PER_SECTOR * 32 - index);
     // 写入扇区
     WritePhysicalSectorWithoutOffset(2, sizeof(plain_text), plain_text, 0x00,
