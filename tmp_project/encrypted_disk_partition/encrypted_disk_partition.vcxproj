@@ -151,7 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EncryptedDiskPartition.cpp" />
     <ClCompile Include="encrypted_disk_partition.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="EncryptedDiskPartition.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
