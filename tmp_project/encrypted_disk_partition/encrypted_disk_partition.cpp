@@ -7,8 +7,8 @@ int main() {
     EncryptedDiskPartition edp;
     // edp.JudgePartitionType(2);
     // edp.JudgePartitionType(3);
-    return edp.DecryptMbr(3);
-    // edp.JudgePartitionType(2);
+    // return edp.DecryptMbr(3);
+    edp.JudgePartitionType(2);
     // edp.DecryptGpt(2);
     // edp.JudgePartitionType(4);
     std::cout << "Hello World!\n";
