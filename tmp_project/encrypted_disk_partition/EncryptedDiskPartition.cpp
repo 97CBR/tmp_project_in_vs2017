@@ -30,6 +30,25 @@ VOID EncryptedDiskPartition::JudgePartitionType(const int device_number) {
     }
 }
 
+void EncryptedDiskPartition::WriteSm4Key(const int device_number, char* key) const {
+    UCHAR data[33] = {0};
+    for (auto i = 0; i < 32; ++i)
+        sprintf(reinterpret_cast<char*>(data) + i, "%c", key[i]);
+    WritePhysicalSector(DEVICE_TAG_DATA_SECTOR, 32, data, 0x80, device_number);
+}
+
+void EncryptedDiskPartition::ReadSm4Key(const int device_number,
+                                        char* key) const {
+
+
+    UCHAR data[512] = {0};
+    ReadPhysicalSector(35, sizeof(data), data, sizeof(data), device_number);
+
+    for (auto i = 0x80; i < 0xA0; ++i) sprintf(key + i - 0x80, "%c", data[i]);
+    // WritePhysicalSector(35, 32, data, 0x80, device_number);
+
+}
+
 
 BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
     UCHAR data[513] = {0};
@@ -70,7 +89,6 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) {
 
     return false;
 }
-
 
 
 BOOL EncryptedDiskPartition::EncryptGpt(const int device_number)  {
@@ -162,8 +180,8 @@ BOOL EncryptedDiskPartition::DecryptMbr(const int device_number) {
 
 BOOL EncryptedDiskPartition::DecryptGpt(const int device_number)  {
     UCHAR encrypt_data[BYTES_PER_SECTOR * 32] = {0};
-  ReadPhysicalSectorWithoutCutOff(PARTITION_ENCRYPTED_DATA_SECTOR,
-                                  sizeof(encrypt_data), encrypt_data,
+    ReadPhysicalSectorWithoutCutOff(PARTITION_ENCRYPTED_DATA_SECTOR,
+                                    sizeof(encrypt_data), encrypt_data,
                                     sizeof(encrypt_data),
                                     device_number);
 

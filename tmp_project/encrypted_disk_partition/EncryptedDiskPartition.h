@@ -5,7 +5,9 @@
 #include <windows.h>
 
 constexpr auto BYTES_PER_SECTOR = 512;
-#define PARTITION_ENCRYPTED_DATA_SECTOR  36
+constexpr auto PARTITION_ENCRYPTED_DATA_SECTOR = 36;
+constexpr auto DEVICE_TAG_DATA_SECTOR = 35;
+
 
 using namespace std;
 
@@ -14,6 +16,8 @@ class EncryptedDiskPartition {
         EncryptedDiskPartition();
         ~EncryptedDiskPartition();
         void JudgePartitionType(int device_number);
+        void WriteSm4Key(const int device_number, char* key) const;
+        void ReadSm4Key(int device_number, char* key) const;
         BOOL EncryptMbr(int device_number);
         BOOL DecryptMbr(int device_number) ;
         BOOL DecryptGpt(int device_number) ;

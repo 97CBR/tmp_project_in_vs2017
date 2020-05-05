@@ -9,6 +9,7 @@ int main() {
     // edp.JudgePartitionType(3);
     // return edp.DecryptMbr(3);
     edp.JudgePartitionType(2);
+    edp.WriteSm4Key(2, (char*)"0123456789ABCDEFFEDCBA9876543210");
     // edp.DecryptGpt(2);
     // edp.JudgePartitionType(4);
     std::cout << "Hello World!\n";
