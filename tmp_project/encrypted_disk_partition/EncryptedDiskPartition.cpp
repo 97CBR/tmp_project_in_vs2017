@@ -72,7 +72,7 @@ BOOL EncryptedDiskPartition::EncryptMbr(const int device_number) const {
     // 保留备份
     // WritePhysicalSector(35, 64, law_data, 0x1B0 + 0x0E, device_number);
 
-    if (law_data[0] == 0x00) {
+    if (law_data[1] == '\0') {
         cout <<  "已加密" << endl;
         return true;
     }
@@ -110,15 +110,20 @@ BOOL EncryptedDiskPartition::EncryptGpt(const int device_number) const {
     lba_backup_sector_int = strtol(lba_backup_sector_str.c_str(), nullptr, 16);
     cout << "备份LBA 地址:" << lba_backup_sector_int << endl;
     int partitoin_number = 0;
+
+    UCHAR tmp[513] = {0};
+    ReadPhysicalSector(2, sizeof(tmp), tmp, sizeof(tmp), device_number);
+    if (tmp[0] == '\0') {
+        cout << "已加密" << endl;
+        return true;
+    }
+
     for (int i = 0; i < 128; ++i) {
-        UCHAR tmp[513] = {0};
+        memset(tmp, 0, sizeof(tmp)*sizeof(UCHAR));
         ReadPhysicalSector(2 + i / 4, sizeof(tmp), tmp, sizeof(tmp),
                            device_number);
 
-        if (tmp[0] == 0x00) {
-            cout << "已加密" << endl;
-            return true;
-        }
+
 
         UCHAR header[8] = {0};
         memcpy_s(header, 8, tmp + 128 * (i % 4), 8);

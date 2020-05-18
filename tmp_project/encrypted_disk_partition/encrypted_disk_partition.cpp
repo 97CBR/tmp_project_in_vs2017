@@ -6,13 +6,13 @@
 int main() {
     EncryptedDiskPartition edp;
     // edp.WriteSm4Key(3, (char*)"0123456789ABCDEFFEDCBA9876543210");
-    edp.JudgePartitionType(2);
+    //edp.JudgePartitionType(2);
     // edp.JudgePartitionType(3);
-    edp.DecryptGpt(2);
+    //edp.DecryptGpt(2);
     // return edp.DecryptMbr(3);
     // edp.JudgePartitionType(2);
 
-    // edp.DecryptMbr(3);
+    edp.DecryptMbr(2);
     // edp.JudgePartitionType(4);
     std::cout << "Hello World!\n";
 }
