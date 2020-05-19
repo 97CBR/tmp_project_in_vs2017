@@ -6,7 +6,7 @@
 // 默认构造
 CbrThreadPool::CbrThreadPool(): min_(1), max_(4) {
 
-    cout << "创建默认线程池，min 1 - max 4" << endl;
+    std::cout << "创建默认线程池，min 1 - max 4" << std::endl;
     current_waiting_tasks_number_.store(0);
     current_threads_number_.store(0);
     current_idle_thread_.store(0);
@@ -20,14 +20,14 @@ CbrThreadPool::CbrThreadPool(): min_(1), max_(4) {
 CbrThreadPool::CbrThreadPool(const int min, const int max)
     : min_(min), max_(max) {
 
-    cout << "创建指定数量线程池" << endl;
+    std::cout << "创建指定数量线程池" << std::endl;
     Init(min, max);
 }
 
 // 创建超时等待线程池
 CbrThreadPool::CbrThreadPool(const int min, const int max, const int timeout)
     : min_(min), max_(max) {
-    cout << "创建超时等待线程池" << endl;
+    std::cout << "创建超时等待线程池" << std::endl;
     Init(min, max, timeout);
 }
 
@@ -36,13 +36,13 @@ CbrThreadPool::~CbrThreadPool() {
     if (!stop_.load())
         Stop();
 
-    cout << "销毁" << endl;
+    std::cout << "销毁" << std::endl;
 }
 
 // 终止所有线程，清除所有队列
 void CbrThreadPool::Stop() {
 
-    cout << "终止线程" << endl;
+    std::cout << "终止线程" << std::endl;
     stop_.store(true);
 
     condition_.notify_all();
@@ -72,7 +72,7 @@ void CbrThreadPool::Init(const int min, const int max) {
         });
 
     }
-    thread watch(&CbrThreadPool::DynamicAdjustThreadNumber, this, min, max);
+    std::thread watch(&CbrThreadPool::DynamicAdjustThreadNumber, this, min, max);
     watch.detach();
 }
 
@@ -87,7 +87,7 @@ void CbrThreadPool::Init(const int min, const int max,
             CreateThread(timeout);
         });
     }
-    thread watch(&CbrThreadPool::DynamicAdjustThreadNumber, this, min, max);
+    std::thread watch(&CbrThreadPool::DynamicAdjustThreadNumber, this, min, max);
     watch.detach();
 }
 
@@ -138,13 +138,13 @@ void CbrThreadPool::DynamicAdjustThreadNumber(const int min = 2, const int max =
         }
 
 #ifdef DEBUG
-        cout << "current idle thread number："
-             << current_idle_thread_.load()
-             << "\tcurrent thread number："
-             << current_threads_number_.load() << endl;
-        cout << "current tasks number：" << current_tasks_number_.load()
-             << "\tcurrent waiting tasks number："
-             << current_waiting_tasks_number_.load() << endl;
+        std::cout << "current idle thread number："
+                  << current_idle_thread_.load()
+                  << "\tcurrent thread number："
+                  << current_threads_number_.load() << std::endl;
+        std::cout << "current tasks number：" << current_tasks_number_.load()
+                  << "\tcurrent waiting tasks number："
+                  << current_waiting_tasks_number_.load() << std::endl;
 #endif
 
     }
@@ -157,18 +157,18 @@ void CbrThreadPool::CreateThread() {
     ++current_threads_number_;
     ++current_idle_thread_;
 #ifdef DEBUG
-    cout << "创建线程" << endl;
+    std::cout << "创建线程" << std::endl;
 #endif
     while (true) {
-        function<void()> execute_task;
+        std::function<void()> execute_task;
 
         // 等待锁、以及判断是否有终止标志、以及任务队列是否为空
 
-        unique_lock<mutex> lock{this->task_lock_};
+        std::unique_lock<std::mutex> lock{this->task_lock_};
         // ++current_waiting_tasks_number_;
         if (this->stop_.load()) {
 #ifdef DEBUG
-            cout << "检测到停止信号" << endl;
+            std::cout << "检测到停止信号" << std::endl;
 #endif
             break;
             //如果任务队列为空，则进去等待
@@ -179,7 +179,7 @@ void CbrThreadPool::CreateThread() {
                 return this->stop_.load() || !this->tasks_.empty();
             });
 #ifdef DEBUG
-            cout << "收到通知" << endl;
+            std::cout << "收到通知" << std::endl;
 #endif
 
             if (this->current_threads_number_.load() > min_) {
@@ -187,11 +187,11 @@ void CbrThreadPool::CreateThread() {
                 --this->current_threads_number_;
                 this->terminal_.store(false);
 #ifdef DEBUG
-                cout << "销毁多余线程" << endl;
-                cout << "current idle thread number："
-                     << current_idle_thread_.load()
-                     << "\tcurrent thread number："
-                     << current_threads_number_.load() << endl;
+                std::cout << "销毁多余线程" << std::endl;
+                std::cout << "current idle thread number："
+                          << current_idle_thread_.load()
+                          << "\tcurrent thread number："
+                          << current_threads_number_.load() << std::endl;
 #endif
                 return;
             }
@@ -201,12 +201,12 @@ void CbrThreadPool::CreateThread() {
             // if (this->terminal_.load()) {
             //     --this->current_idle_thread_;
             //     --this->current_threads_number_;
-            //     cout << "销毁多余线程" << endl;
-            //     cout << "current idle thread number："
+            //    std::cout << "销毁多余线程" <<std::endl;
+            //    std::cout << "current idle thread number："
             //          << current_idle_thread_.load()
             //          << "\tcurrent thread number："
             //          << current_threads_number_.load() <<
-            //          endl;
+            //         std::endl;
             //     this->terminal_.store(false);
             //     // this->threads_pool_.
             //     return;
@@ -242,17 +242,17 @@ void CbrThreadPool::CreateThread(const int timeout) {
     ++current_threads_number_;
     ++current_idle_thread_;
 #ifdef DEBUG
-    cout << "创建线程" << endl;
+    std::cout << "创建线程" << std::endl;
 #endif
     while (true) {
-        function<void()> execute_task;
+        std::function<void()> execute_task;
 
-        unique_lock<mutex> lock{this->task_lock_};
+        std::unique_lock<std::mutex> lock{this->task_lock_};
 
         ++current_waiting_tasks_number_;
         if (this->stop_.load()) {
 #ifdef DEBUG
-            cout << "检测到停止信号" << endl;
+            std::cout << "检测到停止信号" << std::endl;
 #endif
             break;
             // 等待锁、以及判断是否有终止标志、以及任务队列是否为空
@@ -260,21 +260,21 @@ void CbrThreadPool::CreateThread(const int timeout) {
             //如果任务队列为空，则进去等待
         }
         if (tasks_.empty()) {
-            condition_.wait_for(lock, chrono::seconds(timeout), [this]() {
+            condition_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
                 return this->stop_.load() || !this->tasks_.empty();
             });
 #ifdef DEBUG
-            cout << "收到通知" << endl;
+            std::cout << "收到通知" << std::endl;
 #endif
             if (this->current_threads_number_.load() > min_) {
                 --this->current_idle_thread_;
                 --this->current_threads_number_;
                 this->terminal_.store(false);
 #ifdef DEBUG
-                cout << "销毁多余线程" << endl;
-                cout << "current idle thread number：" << current_idle_thread_.load()
-                     << "\tcurrent thread number：" << current_threads_number_.load()
-                     << endl;
+                std::cout << "销毁多余线程" << std::endl;
+                std::cout << "current idle thread number：" << current_idle_thread_.load()
+                          << "\tcurrent thread number：" << current_threads_number_.load()
+                          << std::endl;
 #endif
                 return;
             }
@@ -284,7 +284,7 @@ void CbrThreadPool::CreateThread(const int timeout) {
             // if (this->terminal_.load()) {
             //     --this->current_idle_thread_;
             //     --this->current_threads_number_;
-            //     cout << "销毁多余线程" << endl;
+            //    std::cout << "销毁多余线程" <<std::endl;
             //     this->terminal_.store(false);
             //     // this->threads_pool_.
             //     return;
@@ -300,12 +300,12 @@ void CbrThreadPool::CreateThread(const int timeout) {
             this->tasks_.pop();
             --this->current_idle_thread_;
 #ifdef DEBUG
-            cout << "current idle thread number：" << current_idle_thread_.load()
-                 << "\tcurrent thread number：" << current_threads_number_.load()
-                 << endl;
-            cout << "current tasks number：" << current_tasks_number_.load()
-                 << "\tcurrent waiting tasks number："
-                 << current_waiting_tasks_number_.load() << endl;
+            std::cout << "current idle thread number：" << current_idle_thread_.load()
+                      << "\tcurrent thread number：" << current_threads_number_.load()
+                      << std::endl;
+            std::cout << "current tasks number：" << current_tasks_number_.load()
+                      << "\tcurrent waiting tasks number："
+                      << current_waiting_tasks_number_.load() << std::endl;
 #endif
 
             lock.unlock();
